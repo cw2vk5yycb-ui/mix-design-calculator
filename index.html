@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mix Design Calculator | ForgeMix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0c10;
+  --bg-pattern: radial-gradient(circle at 15% 10%, rgba(255, 107, 53, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(217, 70, 239, 0.06) 0%, transparent 45%);
+  --panel: rgba(18, 20, 26, 0.85);
+  --panel-solid: #13161f;
+  --panel2: #191c26;
+  --panel-hover: #222634;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text: #f3f5f8;
+  --text-dim: #cbd2dc;
+  --muted: #8b95a5;
+  --orange: #ff6b35;
+  --orange-glow: rgba(255, 107, 53, 0.25);
+  --orange2: #ff8a5b;
+  --magenta: #d946ef;
+  --green: #2ecc71;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] {
+  --bg: #f3f5f9;
+  --bg-pattern: radial-gradient(circle at 15% 10%, rgba(255, 107, 53, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 45%);
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-solid: #ffffff;
+  --panel2: #eef2f7;
+  --panel-hover: #e2e8f0;
+  --line: rgba(0, 0, 0, 0.1);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --text: #111827;
+  --text-dim: #374151;
+  --muted: #6b7280;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: var(--bg-pattern);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background-color 0.25s, color 0.25s;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  touch-action: manipulation;
+}
+
+.app {
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Simulated Mobile View on Desktop */
+body.simulated-mobile .app {
+  max-width: 440px !important;
+  margin: 20px auto;
+  border: 12px solid #20232c;
+  border-radius: 44px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 2px var(--line);
+  background: var(--bg);
+  padding: 16px 12px 32px;
+}
+
+/* Simulated phone layout overrides */
+body.simulated-mobile { overflow-x: hidden; }
+body.simulated-mobile .app { width: 100%; min-width: 0; overflow: hidden; }
+body.simulated-mobile .topbar { flex-direction: column; align-items: stretch; }
+body.simulated-mobile .header-actions { justify-content: space-between; }
+body.simulated-mobile .hero { align-items: flex-start; }
+body.simulated-mobile .layout,
+body.simulated-mobile .two-col,
+body.simulated-mobile .metrics { grid-template-columns: minmax(0, 1fr); }
+body.simulated-mobile .card,
+body.simulated-mobile .metric,
+body.simulated-mobile .layout,
+body.simulated-mobile .stack,
+body.simulated-mobile .two-col,
+body.simulated-mobile .field-grid { min-width: 0; }
+body.simulated-mobile .field-grid { grid-template-columns: minmax(0, 1fr); }
+body.simulated-mobile .field.full { grid-column: auto; }
+body.simulated-mobile .tabs { overflow: visible; max-width: 100%; flex-wrap: wrap; }
+body.simulated-mobile table { min-width: 0; }
+body.simulated-mobile .table-wrap { max-width: 100%; }
+.recipe-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 16px; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--panel); }
+.recipe-toolbar .recipe-title { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.recipe-toolbar .recipe-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.recipe-toolbar button { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:11px; font-weight:700; }
+.recipe-toolbar button.active, .recipe-toolbar button:hover { border-color:var(--orange); background:rgba(255,107,53,.14); color:var(--text); }
+.build-version { color:var(--muted); font-size:10px; font-weight:700; white-space:nowrap; }
+.recipe-ref { color:var(--orange); font-size:10px; font-weight:700; text-decoration:none; white-space:nowrap; }
+.recipe-ref:hover { text-decoration:underline; }
+/* Header & Navigation */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--orange), var(--magenta));
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 20px;
+  box-shadow: 0 6px 20px var(--orange-glow);
+  overflow: hidden;
+}
+.logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.brand h1 { font-size: 17px; margin: 0; letter-spacing: -0.4px; font-weight: 800; white-space: nowrap; }
+.brand h1 span { color: var(--orange); }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+.pill-btn:hover, .pill-btn:active {
+  border-color: var(--orange);
+  background: var(--panel-hover);
+  color: #fff;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+/* Tabs Bar */
+.tabs-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 22px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.tabs-scroll::-webkit-scrollbar { display: none; }
+.tabs {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+  border-bottom: 1px solid var(--line);
+  padding: 0 2px;
+}
+.tab {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  padding: 10px 16px;
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.tab:hover { color: var(--text); background: var(--panel2); }
+.tab.active {
+  color: var(--text);
+  background: var(--panel);
+  border-color: var(--line);
+  border-bottom-color: var(--bg);
+  font-weight: 700;
+}
+.tab.active::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--orange), var(--magenta));
+  border-radius: 2px 2px 0 0;
+}
+
+/* Hero Title */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.eyebrow {
+  color: var(--orange);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.hero h2 {
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 800;
+}
+.hero p { color: var(--muted); margin: 6px 0 0; max-width: 720px; font-size: 13px; }
+
+/* Grid Layouts */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 410px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.stack { display: grid; gap: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* Cards & Panels */
+.card {
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: rgba(255, 107, 53, 0.25); }
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.card h3 { font-size: 15px; margin: 0; font-weight: 750; letter-spacing: -0.3px; }
+.card-sub { font-size: 11.5px; color: var(--muted); margin: 3px 0 0; font-weight: 500; }
+.badge {
+  color: var(--orange);
+  background: rgba(255, 107, 53, 0.12);
+  border: 1px solid rgba(255, 107, 53, 0.25);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* Preset Selectors (Touch & Mobile Optimized) */
+.presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.preset {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  user-select: none;
+}
+.preset small {
+  display: block;
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.preset:hover {
+  background: var(--panel-hover);
+  border-color: rgba(255, 107, 53, 0.4);
+}
+.preset.active {
+  border-color: var(--orange);
+  background: rgba(255, 107, 53, 0.15);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 107, 53, 0.25);
+}
+
+/* Form Controls */
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+.field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.unit { color: var(--muted); font-size: 10.5px; font-weight: 500; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--orange);
+  background: var(--panel-solid);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.18);
+}
+.field input:disabled { opacity: 0.55; cursor: not-allowed; }
+.help { font-size: 11px; color: var(--muted); margin-top: 5px; font-weight: 500; line-height: 1.35; }
+.rule { height: 1px; background: var(--line); margin: 16px 0; }
+.section-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  margin-bottom: 8px;
+}
+
+/* Metrics Dashboard Cards */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.metric {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.metric::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 3.5px; height: 100%;
+  background: var(--line);
+}
+.metric:nth-child(1)::before { background: var(--orange); }
+.metric:nth-child(2)::before { background: var(--magenta); }
+.metric:nth-child(3)::before { background: var(--green); }
+.metric:nth-child(4)::before { background: var(--yellow); }
+
+.metric .label {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.metric .value {
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 850;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+.metric .suffix { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.metric .delta { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+.accent { color: var(--orange); }
+.good { color: var(--green); }
+.warn { color: var(--yellow); }
+
+/* Progress Bars */
+.bar-row { margin: 12px 0; }
+.bar-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; font-weight: 600; margin-bottom: 5px; }
+.bar-meta span:last-child { color: var(--muted); font-weight: 500; }
+.bar { height: 7px; background: var(--panel2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); border-radius: 999px; transition: width 0.3s ease; }
+.bar-row:nth-child(2) .bar > span { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+.bar-row:nth-child(3) .bar > span { background: linear-gradient(90deg, var(--green), #059669); }
+
+/* Cost Lists */
+.cost-list { display: grid; gap: 0; }
+.cost-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.cost-line:last-child { border-bottom: none; }
+.cost-line span:first-child { color: var(--muted); font-weight: 500; }
+.cost-line strong { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); }
+
+.cost-total {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.12), rgba(217, 70, 239, 0.07));
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+}
+.cost-total strong { font-size: 22px; color: var(--orange2); font-weight: 850; letter-spacing: -0.4px; }
+
+.notice {
+  padding: 12px 14px;
+  background: rgba(255, 107, 53, 0.07);
+  border-left: 3.5px solid var(--orange);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.notice strong { color: var(--text); }
+
+/* Buttons & Rows */
+.btn {
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 12.5px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--orange), #ea580c);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 16px var(--orange-glow);
+}
+.btn.gpay { background: #1a73e8; color: #fff; border-color: transparent; }
+.btn.paypal { background: #00457c; color: #fff; border-color: transparent; }
+.btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.button-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin-top: 6px; }
+table { width: 100%; border-collapse: collapse; min-width: 520px; }
+th, td { text-align: right; padding: 11px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th { font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; background: var(--panel2); }
+td:first-child, th:first-child { text-align: left; }
+td { font-size: 12.5px; font-weight: 500; }
+tbody tr:hover { background: var(--panel-hover); }
+tbody tr:last-child td { border-bottom: none; }
+
+.big-number { font-size: 30px; font-weight: 900; letter-spacing: -1px; }
+
+/* Checklist */
+.checklist { display: grid; gap: 10px; }
+.check {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.check:hover { border-color: rgba(255, 107, 53, 0.4); }
+.check input { accent-color: var(--orange); margin-top: 3px; width: 16px; height: 16px; flex-shrink: 0; }
+.check strong { display: block; font-size: 13px; font-weight: 700; }
+.check span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #111827;
+  color: #fff;
+  border: 1px solid var(--orange);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Footer */
+.footer {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  margin: 36px 0 10px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.footer a { color: var(--orange); text-decoration: none; font-weight: 700; }
+
+.hidden { display: none !important; }
+
+/* Responsiveness */
+@media(max-width: 1080px) {
+  .layout { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media(max-width: 720px) {
+  .app { padding: 14px 10px 30px; }
+  .topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .header-actions { justify-content: space-between; }
+  .two-col { grid-template-columns: 1fr; }
+  .field-grid { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="app">
+<!-- Topbar -->
+<header class="topbar">
+  <div class="brand">
+    <div class="logo"><img src="assets/mix-design-logo.jpg" alt="Mix Design Calculator logo"></div>
+    <div>
+      <h1>Mix Design <span>Calculator</span></h1>
+      <p>Fly-ash Brick, Paver & RMC Mix Design Suite</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="pill-btn" id="viewToggleBtn" onclick="toggleViewMode()">
+      <span>📱</span> <span id="viewBtnText">Phone View</span>
+    </button>
+    <div class="pill-btn" style="pointer-events:none;">
+      <span class="dot"></span> <span>Engine Active</span>
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div>
+    <div class="eyebrow" id="moduleEyebrow">Fly-ash Bricks Workspace</div>
+    <h2 id="moduleTitle">Batch Mix & Cost Control</h2>
+    <p id="moduleSub">Live dry batch configuration, cement percentage targets, density-based yield forecast, and raw material unit economics.</p>
+  </div>
+</section>
+
+<!-- Tabs Navigation -->
+<div class="tabs-scroll">
+  <nav class="tabs" aria-label="Application Modules">
+    <button class="tab active" data-tab="dashboard">🧱 Fly-ash Bricks</button>
+    <button class="tab" data-tab="pavers">🔶 Pavers</button>
+    <button class="tab" data-tab="coverblocks">⬛ Cover Blocks</button>
+    <button class="tab" data-tab="rmc">🏭 RMC Plant</button>
+    <button class="tab" data-tab="production">📋 Planner</button>
+    <button class="tab" data-tab="optimization">🔬 Lab</button>
+    <button class="tab" data-tab="settings">⚙️ Settings</button>
+  </nav>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 1. FLY-ASH BRICKS TAB                                                     -->
+<!-- ========================================================================= -->
+<section id="dashboard" class="tab-panel">
+  <div class="layout">
+    <aside class="stack">
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Batch Configuration</h3><p class="card-sub">Dry material recipe proportions</p></div>
+          <span class="badge">01 / RECIPE</span>
+        </div>
+        <div class="section-label">Aggregate Batch Size Preset</div>
+        <div class="presets" id="brickPresets">
+          <button class="preset" data-aggregate="350">350 kg<small>Small</small></button>
+          <button class="preset" data-aggregate="400">400 kg<small>Medium</small></button>
+          <button class="preset active" data-aggregate="450">450 kg<small>Standard</small></button>
+          <button class="preset" data-aggregate="500">500 kg<small>Large</small></button>
+          <button class="preset" data-aggregate="700">700 kg<small>High Vol</small></button>
+          <button class="preset" id="customPreset">Custom<small>Manual</small></button>
+        </div>
+        <div class="field-grid">
+          <div class="field full">
+            <label for="aggregate">Total inert aggregate <span class="unit">kg / batch</span></label>
+            <input id="aggregate" type="number" min="1" step="1" value="450">
+          </div>
+          <div class="field">
+            <label for="flyAsh">Fly ash <span class="unit">kg</span></label>
+            <input id="flyAsh" type="number" min="0" step="1" value="200">
+          </div>
+          <div class="field">
+            <label for="stoneDust">Stone dust / grit <span class="unit">kg</span></label>
+            <input id="stoneDust" type="number" min="0" step="1" value="250">
+          </div>
+        </div>
+        <p class="help" id="aggregateCheck">Fly ash + stone dust should equal total inert aggregate.</p>
+
+        <div class="rule"></div>
+        <div class="section-label">Cement Control Mode</div>
+        <div class="field-grid">
+          <div class="field full">
+            <label for="strengthMode">Mix Target Preset</label>
+            <select id="strengthMode">
+              <option value="lean">Lean Mix · ~5.3% of inert</option>
+              <option value="standard" selected>Standard Commercial · ~7.7% of inert</option>
+              <option value="heavy">Heavy Duty · ~10.0% of inert</option>
+              <option value="custom">Custom Manual Cement</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="cement">Cement <span class="unit">kg / batch</span></label>
+            <input id="cement" type="number" min="0" step="0.5" value="34.65">
+          </div>
+        </div>
+        <p class="help">Cement percentage is calculated relative to dry inert aggregate mass.</p>
+
+        <div class="rule"></div>
+        <div class="section-label">Yield Assumptions</div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="brickWeight">Dry brick weight <span class="unit">kg</span></label>
+            <input id="brickWeight" type="number" min="0.1" step="0.01" value="3.11">
+          </div>
+          <div class="field">
+            <label for="yieldOverride">Actual yield <span class="unit">bricks/batch</span></label>
+            <input id="yieldOverride" type="number" min="0" step="1" placeholder="Auto estimate">
+          </div>
+        </div>
+        <p class="help">Leave yield blank to calculate automatically from total batch mass ÷ brick weight.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Material Pricing Basis</h3><p class="card-sub">Local raw material purchase rates</p></div>
+          <span class="badge">02 / RATES</span>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="cementPrice">Cement bag <span class="unit">₹ / 50 kg</span></label>
+            <input id="cementPrice" type="number" min="0" step="1" value="400">
+          </div>
+          <div class="field">
+            <label for="flyAshPrice">Fly ash <span class="unit">₹ / MT</span></label>
+            <input id="flyAshPrice" type="number" min="0" step="10" value="1200">
+          </div>
+          <div class="field full">
+            <label for="stonePrice">Stone dust / grit <span class="unit">₹ / MT</span></label>
+            <input id="stonePrice" type="number" min="0" step="10" value="900">
+          </div>
+        </div>
+        <div class="notice" style="margin-top:14px">
+          <strong>Raw materials only.</strong> Electricity, labour, pallets, freight, and curing overheads are excluded.
+        </div>
+      </div>
+    </aside>
+
+    <main class="stack">
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Total Dry Batch</div>
+          <div class="value" id="mTotal">484.7 <span class="suffix">kg</span></div>
+          <div class="delta">Inert + cement mass</div>
+        </div>
+        <div class="metric">
+          <div class="label">Cement / Inert</div>
+          <div class="value accent" id="mPercent">7.70<span class="suffix">%</span></div>
+          <div class="delta" id="mPreset">Standard Commercial</div>
+        </div>
+        <div class="metric">
+          <div class="label">Estimated Yield</div>
+          <div class="value good" id="mYield">155 <span class="suffix">bricks</span></div>
+          <div class="delta">Dry density basis</div>
+        </div>
+        <div class="metric">
+          <div class="label">Cement / Brick</div>
+          <div class="value" id="mCementBrick">224 <span class="suffix">g</span></div>
+          <div class="delta" id="mBagYield">223 bricks / bag</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Batch Composition</h3><p class="card-sub">Mass share of each ingredient</p></div>
+            <span class="badge">MASS %</span>
+          </div>
+          <div id="compositionBars"></div>
+          <div class="rule"></div>
+          <div class="cost-line">
+            <span>Inert split balance</span>
+            <strong id="splitValue">450 / 450 kg</strong>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Unit Economics</h3><p class="card-sub">Raw material breakdown per brick</p></div>
+            <span class="badge">₹ / UNIT</span>
+          </div>
+          <div class="cost-list">
+            <div class="cost-line"><span>Cement per brick</span><strong id="cementCostBrick">₹0.00</strong></div>
+            <div class="cost-line"><span>Fly ash per brick</span><strong id="flyCostBrick">₹0.00</strong></div>
+            <div class="cost-line"><span>Stone dust per brick</span><strong id="stoneCostBrick">₹0.00</strong></div>
+            <div class="cost-line"><span>Total batch material cost</span><strong id="batchCost">₹0</strong></div>
+          </div>
+          <div class="cost-total">
+            <div>
+              <div class="muted" style="font-size:10.5px; font-weight:700; text-transform:uppercase;">Raw Cost / Brick</div>
+              <div class="help" style="margin:2px 0 0;">Excludes conversion cost</div>
+            </div>
+            <strong id="totalCostBrick">₹0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Batch Summary Table</h3><p class="card-sub">Recipe and economics at a glance</p></div>
+          <button class="btn" id="exportCsv">Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Material / Metric</th><th>Batch Qty</th><th>Share / Rate</th><th>Batch Cost</th></tr></thead>
+            <tbody id="summaryTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 2. PAVERS TAB                                                             -->
+<!-- ========================================================================= -->
+<section id="pavers" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Paver Block Mix & Unit Cost Calculator</h2>
+    <p class="muted" style="margin:0 0 14px;">Model 60 mm (pedestrian/light) and 80 mm (traffic/heavy) paver batches with custom geometry, batch weights, and proportions.</p>
+    <div class="notice">
+      <strong>Standard Note:</strong> Paver blocks must meet specified compressive strength and abrasion resistance (e.g. IS 15658). Validate all mixes with trials.
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Paver Geometry & Batch</h3><p class="card-sub">Select standard thickness or manual dimensions</p></div>
+        <span class="badge">01 / SIZE</span>
+      </div>
+      <div class="presets" id="paverPresets">
+        <button class="preset active" data-paver-thickness="60">60 mm<small>Light Duty</small></button>
+        <button class="preset" data-paver-thickness="80">80 mm<small>Heavy Duty</small></button>
+        <button class="preset" id="paverCustomBtn">Custom<small>Manual</small></button>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label for="paverLength">Length <span class="unit">mm</span></label><input id="paverLength" type="number" min="1" value="200"></div>
+        <div class="field"><label for="paverWidth">Width <span class="unit">mm</span></label><input id="paverWidth" type="number" min="1" value="100"></div>
+        <div class="field"><label for="paverThickness">Thickness <span class="unit">mm</span></label><input id="paverThickness" type="number" min="1" value="60"></div>
+        <div class="field"><label for="paverDensity">Dry density <span class="unit">kg/m³</span></label><input id="paverDensity" type="number" min="500" step="25" value="2300"></div>
+        <div class="field full"><label for="paverBatchMass">Dry mix batch weight <span class="unit">kg</span></label><input id="paverBatchMass" type="number" min="1" step="10" value="500"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Paver Mix Proportions</h3><p class="card-sub">Percentages must sum to 100%</p></div>
+        <span class="badge">02 / MIX %</span>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label for="paverCementPct">Cement <span class="unit">%</span></label><input id="paverCementPct" type="number" min="0" max="100" step="0.5" value="14"></div>
+        <div class="field"><label for="paverFlyPct">Fly ash <span class="unit">%</span></label><input id="paverFlyPct" type="number" min="0" max="100" step="0.5" value="0"></div>
+        <div class="field"><label for="paverStonePct">Stone dust / sand <span class="unit">%</span></label><input id="paverStonePct" type="number" min="0" max="100" step="0.5" value="45"></div>
+        <div class="field"><label for="paverGritPct">Graded grit (6-10mm) <span class="unit">%</span></label><input id="paverGritPct" type="number" min="0" max="100" step="0.5" value="41"></div>
+        <div class="field full"><label for="paverWaterPct">Water addition <span class="unit">% of dry mix</span></label><input id="paverWaterPct" type="number" min="0" max="25" step="0.5" value="5"></div>
+      </div>
+      <div class="rule"></div>
+      <div class="cost-line"><span>Total proportion</span><strong id="paverPctTotal">100%</strong></div>
+      <p class="help" id="paverPctWarning">Recipe must equal 100%.</p>
+    </div>
+  </div>
+
+    <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Two-Layer Mix Design</h3><p class="card-sub">Separate face/top layer and base/bottom layer; total cost combines both.</p></div><span class="badge">03 / LAYERS</span></div>
+    <div class="field-grid">
+      <div class="field"><label for="paverTopLayerPct">Top layer share <span class="unit">% of dry batch</span></label><input id="paverTopLayerPct" type="number" min="0" max="100" step="1" value="25"></div>
+      <div class="field"><label for="paverTopThickness">Top layer thickness <span class="unit">mm</span></label><input id="paverTopThickness" type="number" min="1" step="1" value="8"></div>
+      <div class="field"><label for="paverTopCementPct">Top cement <span class="unit">%</span></label><input id="paverTopCementPct" type="number" min="0" max="100" step="0.5" value="20"></div>
+      <div class="field"><label for="paverTopStonePct">Top stone dust / sand <span class="unit">%</span></label><input id="paverTopStonePct" type="number" min="0" max="100" step="0.5" value="40"></div>
+      <div class="field"><label for="paverTopGritPct">Top graded grit <span class="unit">%</span></label><input id="paverTopGritPct" type="number" min="0" max="100" step="0.5" value="40"></div>
+      <div class="field"><label for="paverTopWaterPct">Top water <span class="unit">% of layer</span></label><input id="paverTopWaterPct" type="number" min="0" max="25" step="0.5" value="5"></div>
+    </div>
+    <div class="rule"></div><div class="cost-line"><span>Top layer recipe total</span><strong id="paverTopPctTotal">100%</strong></div>
+    <p class="help" id="paverTopPctWarning">Top recipe must equal 100%.</p>
+    <div class="two-col" style="margin-top:12px;"><div><div class="section-label">Top / face layer</div><div class="cost-list" id="paverTopLayerList"></div></div><div><div class="section-label">Bottom / base layer</div><div class="cost-list" id="paverBottomLayerList"></div></div></div>
+    <div class="cost-total"><div><div style="font-size:11px;font-weight:700;text-transform:uppercase;">Combined two-layer batch cost</div><div class="help" style="margin:2px 0 0;">Top + bottom material cost</div></div><strong id="paverCombinedCost">₹0</strong></div>
+  </div>
+<div class="metrics" style="margin-top:20px;">
+    <div class="metric">
+      <div class="label">Yield / Batch</div>
+      <div class="value accent" id="paverYield">181 <span class="suffix">pavers</span></div>
+      <div class="delta">At given density</div>
+    </div>
+    <div class="metric">
+      <div class="label">Weight / Paver</div>
+      <div class="value" id="paverBlockMass">2.76 <span class="suffix">kg</span></div>
+      <div class="delta">Calculated volume mass</div>
+    </div>
+    <div class="metric">
+      <div class="label">Cement / Batch</div>
+      <div class="value" id="paverCementKg">70.0 <span class="suffix">kg</span></div>
+      <div class="delta" id="paverCementBags">1.4 bags (50kg)</div>
+    </div>
+    <div class="metric">
+      <div class="label">Water Addition</div>
+      <div class="value" id="paverWaterLitres">25.0 <span class="suffix">L</span></div>
+      <div class="delta">Adjust for surface moisture</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-head"><div><h3>Material Quantities / Batch</h3></div></div>
+      <div class="cost-list" id="paverMaterialList"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3>Unit Cost Breakdown</h3></div></div>
+      <div class="field-grid" style="margin-bottom:12px;">
+        <div class="field"><label for="paverGritPrice">Grit price <span class="unit">₹ / MT</span></label><input id="paverGritPrice" type="number" min="0" step="10" value="1200"></div>
+        <div class="field"><label for="paverRejectPct">Reject / loss <span class="unit">%</span></label><input id="paverRejectPct" type="number" min="0" max="50" step="0.5" value="3"></div>
+      </div>
+      <div class="cost-list" id="paverCostList"></div>
+      <div class="cost-total">
+        <div>
+          <div class="muted" style="font-size:10.5px; font-weight:700; text-transform:uppercase;">Cost / Saleable Paver</div>
+          <div class="help" style="margin:2px 0 0;">Includes reject allowance</div>
+        </div>
+        <strong id="paverCostEach">₹0.00</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>60 mm vs 80 mm Side-by-Side Comparison</h3><p class="card-sub">Assumes same length, width, density, and batch weight</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Thickness</th><th>Volume / Paver</th><th>Mass / Paver</th><th>Yield / Batch</th><th>Cement / Paver</th><th>Cost / Saleable Paver</th></tr></thead>
+        <tbody id="paverCompareTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 3. COVER BLOCKS TAB                                                       -->
+<!-- ========================================================================= -->
+<section id="coverblocks" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Concrete Cover Block Calculator</h2>
+    <p class="muted" style="margin:0 0 14px;">Estimate production yields, cement usage, and raw material cost per cover block for reinforcing bars.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Block Dimensions & Batch</h3><p class="card-sub">Choose standard cover height or enter custom values</p></div>
+        <span class="badge">01 / SIZE</span>
+      </div>
+      <div class="presets" id="coverPresets">
+        <button class="preset active" data-cover-preset="25">25 mm<small>Slab</small></button>
+        <button class="preset" data-cover-preset="40">40 mm<small>Beam</small></button>
+        <button class="preset" data-cover-preset="50">50 mm<small>Column</small></button>
+        <button class="preset" data-cover-preset="75">75 mm<small>Footing</small></button>
+        <button class="preset" id="coverCustomBtn">Custom<small>Manual</small></button>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label for="coverLength">Length <span class="unit">mm</span></label><input id="coverLength" type="number" min="1" value="50"></div>
+        <div class="field"><label for="coverWidth">Width <span class="unit">mm</span></label><input id="coverWidth" type="number" min="1" value="50"></div>
+        <div class="field"><label for="coverHeight">Cover height <span class="unit">mm</span></label><input id="coverHeight" type="number" min="1" value="25"></div>
+        <div class="field"><label for="coverDensity">Dry density <span class="unit">kg/m³</span></label><input id="coverDensity" type="number" min="500" step="25" value="2400"></div>
+        <div class="field full"><label for="coverBatchMass">Batch weight <span class="unit">kg</span></label><input id="coverBatchMass" type="number" min="1" step="5" value="100"></div>
+        <div class="field full"><label for="coverCavity">Cavity / profile deduction <span class="unit">%</span></label><input id="coverCavity" type="number" min="0" max="80" step="1" value="0"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Mix Proportions</h3><p class="card-sub">Mass percentage of dry batch</p></div>
+        <span class="badge">02 / MIX %</span>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label for="coverCementPct">Cement <span class="unit">%</span></label><input id="coverCementPct" type="number" min="0" max="100" step="0.5" value="16"></div>
+        <div class="field"><label for="coverFlyPct">Fly ash <span class="unit">%</span></label><input id="coverFlyPct" type="number" min="0" max="100" step="0.5" value="0"></div>
+        <div class="field"><label for="coverSandPct">Sand / stone dust <span class="unit">%</span></label><input id="coverSandPct" type="number" min="0" max="100" step="0.5" value="44"></div>
+        <div class="field"><label for="coverGritPct">Fine grit <span class="unit">%</span></label><input id="coverGritPct" type="number" min="0" max="100" step="0.5" value="40"></div>
+        <div class="field full"><label for="coverWaterPct">Water addition <span class="unit">%</span></label><input id="coverWaterPct" type="number" min="0" max="25" step="0.5" value="5"></div>
+      </div>
+      <div class="rule"></div>
+      <div class="cost-line"><span>Total proportion</span><strong id="coverPctTotal">100%</strong></div>
+      <p class="help" id="coverPctWarning">Recipe must total 100%.</p>
+    </div>
+  </div>
+
+  <div class="metrics" style="margin-top:20px;">
+    <div class="metric">
+      <div class="label">Yield / Batch</div>
+      <div class="value accent" id="coverYield">—</div>
+      <div class="delta">Pieces per batch</div>
+    </div>
+    <div class="metric">
+      <div class="label">Piece Weight</div>
+      <div class="value" id="coverBlockMass">— <span class="suffix">kg</span></div>
+      <div class="delta">At density</div>
+    </div>
+    <div class="metric">
+      <div class="label">Cement / Batch</div>
+      <div class="value" id="coverCementKg">— <span class="suffix">kg</span></div>
+      <div class="delta" id="coverBagCount">— bags</div>
+    </div>
+    <div class="metric">
+      <div class="label">Water Estimate</div>
+      <div class="value" id="coverWaterLitres">— <span class="suffix">L</span></div>
+      <div class="delta">Batch water</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-head"><div><h3>Material Breakdown</h3></div></div>
+      <div class="cost-list" id="coverMaterialList"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3>Unit Cost Estimate</h3></div></div>
+      <div class="field-grid" style="margin-bottom:12px;">
+        <div class="field"><label for="coverGritPrice">Grit price <span class="unit">₹ / MT</span></label><input id="coverGritPrice" type="number" min="0" step="10" value="1200"></div>
+        <div class="field"><label for="coverRejectPct">Reject allowance <span class="unit">%</span></label><input id="coverRejectPct" type="number" min="0" max="50" step="0.5" value="3"></div>
+      </div>
+      <div class="cost-list" id="coverCostList"></div>
+      <div class="cost-total">
+        <div><div class="muted" style="font-size:10.5px; font-weight:700; text-transform:uppercase;">Cost / Saleable Block</div></div>
+        <strong id="coverCostEach">₹0.00</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Daily Production Target Demand</h3></div></div>
+    <div class="field-grid">
+      <div class="field"><label for="coverDailyTarget">Daily Target <span class="unit">blocks</span></label><input id="coverDailyTarget" type="number" min="100" step="100" value="5000"></div>
+      <div class="field"><label for="coverDailyBatches">Batches required</label><input id="coverDailyBatches" type="text" readonly value="—"></div>
+      <div class="field"><label for="coverDailyCement">Cement bags / day</label><input id="coverDailyCement" type="text" readonly value="—"></div>
+      <div class="field"><label for="coverDailyCost">Daily raw material cost</label><input id="coverDailyCost" type="text" readonly value="—"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 4. RMC PLANT TAB                                                          -->
+<!-- ========================================================================= -->
+<section id="rmc" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Ready-Mix Concrete (RMC) Plant OS</h2>
+    <p class="muted" style="margin:0 0 14px;">Compute plant throughput, absolute-volume mix designs per m³, moisture-adjusted batch sheets, and profitability margins.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div><h3>Plant Capacity & Dispatch</h3><p class="card-sub">Daily shift output metrics</p></div><span class="badge">01 / PLANT</span></div>
+      <div class="field-grid">
+        <div class="field"><label for="rmcCapacity">Rated capacity <span class="unit">m³ / hr</span></label><input id="rmcCapacity" type="number" min="0.1" step="0.5" value="30"></div>
+        <div class="field"><label for="rmcUtil">Utilization <span class="unit">%</span></label><input id="rmcUtil" type="number" min="0" max="100" step="1" value="75"></div>
+        <div class="field"><label for="rmcShift">Shift duration <span class="unit">hours</span></label><input id="rmcShift" type="number" min="0.5" step="0.5" value="8"></div>
+        <div class="field"><label for="rmcDispatch">Required dispatch <span class="unit">m³ / day</span></label><input id="rmcDispatch" type="number" min="1" step="5" value="180"></div>
+        <div class="field"><label for="rmcTruck">Transit mixer capacity <span class="unit">m³</span></label><input id="rmcTruck" type="number" min="1" step="0.5" value="6"></div>
+        <div class="field"><label for="rmcBatchVol">Pan mixer batch size <span class="unit">m³</span></label><input id="rmcBatchVol" type="number" min="0.1" step="0.1" value="1.5"></div>
+        <div class="field full"><label for="rmcDowntime">Downtime & waiting <span class="unit">% of shift</span></label><input id="rmcDowntime" type="number" min="0" max="80" step="1" value="10"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Live Capacity Throughput</h3></div><span class="badge">OUTPUT</span></div>
+      <div class="cost-list" id="rmcCapacityList"></div>
+      <div class="notice" id="rmcCapacityWarning" style="margin-top:14px;">Capacity status will appear here.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Preliminary Mix Design (Absolute Volume Method)</h3><p class="card-sub">Grade selection and mass per cubic metre</p></div><span class="badge">02 / MIX</span></div>
+    <div class="field-grid">
+      <div class="field"><label for="rmcGrade">Grade Preset</label>
+        <select id="rmcGrade">
+          <option value="M20">M20 (20 MPa)</option>
+          <option value="M25">M25 (25 MPa)</option>
+          <option value="M30" selected>M30 (30 MPa)</option>
+          <option value="M35">M35 (35 MPa)</option>
+          <option value="M40">M40 (40 MPa)</option>
+          <option value="M45">M45 (45 MPa)</option>
+          <option value="M50">M50 (50 MPa)</option>
+        </select>
+      </div>
+      <div class="field"><label for="rmcStrength">Target Strength <span class="unit">MPa</span></label><input id="rmcStrength" type="number" value="30"></div>
+      <div class="field"><label for="rmcBinder">Total Binder <span class="unit">kg / m³</span></label><input id="rmcBinder" type="number" value="380"></div>
+      <div class="field"><label for="rmcFlyPct">Fly ash replacement <span class="unit">% of binder</span></label><input id="rmcFlyPct" type="number" value="20"></div>
+      <div class="field"><label for="rmcWater">Effective water <span class="unit">L / m³</span></label><input id="rmcWater" type="number" value="170"></div>
+      <div class="field"><label for="rmcCoarsePct">Coarse aggregate share <span class="unit">% agg vol</span></label><input id="rmcCoarsePct" type="number" value="60"></div>
+      <div class="field"><label for="rmcFineMoist">Sand moisture <span class="unit">%</span></label><input id="rmcFineMoist" type="number" step="0.1" value="2.5"></div>
+      <div class="field"><label for="rmcFineAbs">Sand absorption <span class="unit">%</span></label><input id="rmcFineAbs" type="number" step="0.1" value="1.0"></div>
+      <div class="field"><label for="rmcCoarseMoist">Grit moisture <span class="unit">%</span></label><input id="rmcCoarseMoist" type="number" step="0.1" value="0.8"></div>
+      <div class="field"><label for="rmcCoarseAbs">Grit absorption <span class="unit">%</span></label><input id="rmcCoarseAbs" type="number" step="0.1" value="0.5"></div>
+      <div class="field"><label for="rmcAdmix">Admixture dosage <span class="unit">% of binder</span></label><input id="rmcAdmix" type="number" step="0.1" value="0.8"></div>
+      <div class="field"><label for="rmcAir">Entrapped air <span class="unit">%</span></label><input id="rmcAir" type="number" step="0.1" value="1.5"></div>
+      <div class="field"><label for="rmcCementSG">Cement SG</label><input id="rmcCementSG" type="number" step="0.01" value="3.15"></div>
+      <div class="field"><label for="rmcFlySG">Fly ash SG</label><input id="rmcFlySG" type="number" step="0.01" value="2.20"></div>
+      <div class="field"><label for="rmcFineSG">Fine agg SG</label><input id="rmcFineSG" type="number" step="0.01" value="2.65"></div>
+      <div class="field"><label for="rmcCoarseSG">Coarse agg SG</label><input id="rmcCoarseSG" type="number" step="0.01" value="2.70"></div>
+      <div class="field full"><label for="rmcMaxWb">Max permitted W/B ratio</label><input id="rmcMaxWb" type="number" step="0.01" value="0.50"></div>
+    </div>
+
+    <div class="metrics" style="margin-top:20px;">
+      <div class="metric"><div class="label">Cement</div><div class="value" id="rmcCementOut">—</div><div class="delta">kg / m³</div></div>
+      <div class="metric"><div class="label">Fly Ash</div><div class="value" id="rmcFlyOut">—</div><div class="delta">kg / m³</div></div>
+      <div class="metric"><div class="label">Sand (Fine)</div><div class="value" id="rmcFineOut">—</div><div class="delta">kg / m³</div></div>
+      <div class="metric"><div class="label">Grit (Coarse)</div><div class="value" id="rmcCoarseOut">—</div><div class="delta">kg / m³</div></div>
+    </div>
+
+    <div class="two-col" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-head"><div><h3>Mix Quantities & Moisture Balance</h3></div></div>
+        <div class="cost-list" id="rmcMixList"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Truckload / Batch Sheet</h3></div></div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="rmcBatchVolume">Select batch volume <span class="unit">m³</span></label>
+          <input id="rmcBatchVolume" type="number" min="0.1" step="0.5" value="6.0">
+        </div>
+        <div class="cost-list" id="rmcBatchList"></div>
+      </div>
+    </div>
+    <div class="notice" id="rmcMixWarning" style="margin-top:16px;">Validation status will appear here.</div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head">
+      <div><h3>RMC Unit Cost & Dispatch Pricing</h3><p class="card-sub">Raw materials, plant overhead, and margin markup</p></div>
+      <div class="button-row">
+        <button class="btn" onclick="window.print()">Print Report</button>
+        <button class="btn" id="rmcExport">Export CSV</button>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div class="field"><label for="rmcCementPrice">Cement <span class="unit">₹ / 50 kg bag</span></label><input id="rmcCementPrice" type="number" value="400"></div>
+      <div class="field"><label for="rmcFlyPrice">Fly ash <span class="unit">₹ / kg</span></label><input id="rmcFlyPrice" type="number" step="0.1" value="1.2"></div>
+      <div class="field"><label for="rmcFinePrice">Sand <span class="unit">₹ / kg</span></label><input id="rmcFinePrice" type="number" step="0.1" value="0.9"></div>
+      <div class="field"><label for="rmcCoarsePrice">Grit / Stone <span class="unit">₹ / kg</span></label><input id="rmcCoarsePrice" type="number" step="0.1" value="1.1"></div>
+      <div class="field"><label for="rmcWaterPrice">Water <span class="unit">₹ / 1,000 L</span></label><input id="rmcWaterPrice" type="number" value="50"></div>
+      <div class="field"><label for="rmcAdmixPrice">Admixture <span class="unit">₹ / kg</span></label><input id="rmcAdmixPrice" type="number" value="120"></div>
+      <div class="field"><label for="rmcOverheads">Plant & diesel overhead <span class="unit">₹ / m³</span></label><input id="rmcOverheads" type="number" value="250"></div>
+      <div class="field"><label for="rmcWastage">Wastage / transit loss <span class="unit">%</span></label><input id="rmcWastage" type="number" value="2"></div>
+      <div class="field"><label for="rmcMargin">Profit Margin <span class="unit">%</span></label><input id="rmcMargin" type="number" value="15"></div>
+      <div class="field"><label for="rmcMarginType">Margin Basis</label>
+        <select id="rmcMarginType">
+          <option value="markup">Markup on cost</option>
+          <option value="margin">Margin on sell price</option>
+        </select>
+      </div>
+    </div>
+    <div class="metrics" style="margin-top:20px;">
+      <div class="metric"><div class="label">Raw Material Cost</div><div class="value accent" id="rmcRawCost">—</div><div class="delta">₹ / m³</div></div>
+      <div class="metric"><div class="label">Fully Loaded Cost</div><div class="value" id="rmcLoadedCost">—</div><div class="delta">₹ / m³ with overhead</div></div>
+      <div class="metric"><div class="label">Suggested Selling Price</div><div class="value good" id="rmcSellPrice">—</div><div class="delta">₹ / m³ quote</div></div>
+      <div class="metric"><div class="label">Daily Raw Material Cost</div><div class="value" id="rmcDailyCost">—</div><div class="delta">For required dispatch</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 5. PRODUCTION PLANNER TAB                                                 -->
+<!-- ========================================================================= -->
+<section id="production" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Daily Production Demand & Procurement Planner</h2>
+    <p class="muted" style="margin:0 0 14px;">Translate your active brick mix into daily material purchase targets, mixer running hours, and inventory requirements.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="dailyTarget">Daily brick production target <span class="unit">bricks</span></label>
+        <input id="dailyTarget" type="number" min="100" step="500" value="10000">
+      </div>
+      <div class="field">
+        <label for="dailyBatches">Manual batch count override <span class="unit">optional</span></label>
+        <input id="dailyBatches" type="number" placeholder="Auto calculated from yield">
+      </div>
+      <div class="field">
+        <label for="moisture">Target water addition <span class="unit">% dry mass</span></label>
+        <input id="moisture" type="number" min="0" max="25" step="0.5" value="9">
+      </div>
+      <div class="field">
+        <label for="batchesPerHour">Pan mixer throughput <span class="unit">batches / hour</span></label>
+        <input id="batchesPerHour" type="number" min="1" step="0.5" value="6">
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="label">Batches Required</div>
+      <div class="value accent" id="pBatches">65</div>
+      <div class="delta">Rounded up batches</div>
+    </div>
+    <div class="metric">
+      <div class="label">Cement Bags / Day</div>
+      <div class="value" id="pBags">45</div>
+      <div class="delta">50 kg bags to procure</div>
+    </div>
+    <div class="metric">
+      <div class="label">Total Raw Material</div>
+      <div class="value" id="pTons">31.5 <span class="suffix">MT</span></div>
+      <div class="delta">Total dry batch tonnage</div>
+    </div>
+    <div class="metric">
+      <div class="label">Water Consumption</div>
+      <div class="value" id="pWater">2,835 <span class="suffix">L</span></div>
+      <div class="delta">Estimated daily water demand</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-head"><div><h3>Procurement Quantity Breakdown</h3></div></div>
+      <div class="cost-list" id="dailyMaterials"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3>Daily Production Cost Forecast</h3></div></div>
+      <div class="big-number accent" id="dailyCost">₹0</div>
+      <p class="muted" style="margin:4px 0 12px;">Total estimated raw material budget per day</p>
+      <div class="rule"></div>
+      <div class="cost-list" id="dailyCostLines"></div>
+      <div class="rule"></div>
+      <div class="cost-line"><span>Estimated mixer runtime</span><strong id="runtime">10.8 hours</strong></div>
+      <div class="help">Excludes cleaning, pan maintenance, pallet delivery, and shift breaks.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Standard Target Volume Scenarios</h3><p class="card-sub">Quick forecasts for standard factory volume tiers</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Daily Bricks</th><th>Batches</th><th>Cement Bags</th><th>Fly Ash (MT)</th><th>Stone Dust (MT)</th><th>Water (L)</th><th>Raw Cost (₹)</th></tr></thead>
+        <tbody id="scenarioTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 6. OPTIMIZATION LAB TAB                                                   -->
+<!-- ========================================================================= -->
+<section id="optimization" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Mix Optimization & Plant Trial Workbench</h2>
+    <p class="muted" style="margin:0 0 14px;">Log test batches to cure edge chipping, optimize moisture bands, and track 7/28 day compressive test results.</p>
+    <div class="notice">
+      <strong>Active Baseline:</strong> <span id="baselineText">450 kg aggregate recipe.</span> Change only one variable per trial (e.g. moisture or grit grading) to isolate improvements.
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div><h3>Quality & Compaction Checklist</h3></div><span class="badge">AUDIT</span></div>
+      <div class="checklist">
+        <label class="check">
+          <input type="checkbox">
+          <div><strong>Moisture Squeeze Test</strong><span>Ball dry mix in hand; should hold shape without weeping water or crumbling on touch.</span></div>
+        </label>
+        <label class="check">
+          <input type="checkbox">
+          <div><strong>Aggregate Gradation</strong><span>Check fines ratio. High dust causes sticky moulds; coarse grit prevents edge crumbling.</span></div>
+        </label>
+        <label class="check">
+          <input type="checkbox">
+          <div><strong>Press Vibration & Pressure</strong><span>Log hydraulic pressure (typically 120-160 bar) and vibration time (2.5-4.5s).</span></div>
+        </label>
+        <label class="check">
+          <input type="checkbox">
+          <div><strong>Stacking & Curing Moisture</strong><span>Cover green bricks with polythene sheet for 24h before water ponding/sprinkling.</span></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Trial Log Recorder</h3></div><span class="badge">RECORD</span></div>
+      <div class="field-grid">
+        <div class="field"><label for="trialId">Trial Batch ID</label><input id="trialId" value="T-001"></div>
+        <div class="field"><label for="trialMoisture">Moisture <span class="unit">%</span></label><input id="trialMoisture" type="number" min="0" max="25" step="0.5" value="8.5"></div>
+        <div class="field"><label for="trialFlyShare">Fly ash <span class="unit">% inert</span></label><input id="trialFlyShare" type="number" value="44.4"></div>
+        <div class="field"><label for="trialCementKg">Cement <span class="unit">kg</span></label><input id="trialCementKg" type="number" value="35"></div>
+        <div class="field full"><label for="trialNotes">Observations / Lab Compressive Strength</label><textarea id="trialNotes" rows="2" placeholder="Green brick handling, edge finish, demoulding speed, 7-day cube strength (e.g. 8.2 MPa)..."></textarea></div>
+      </div>
+      <div class="button-row" style="margin-top:14px;">
+        <button class="btn primary" id="saveTrial">Save Trial Entry</button>
+        <button class="btn" id="clearTrials">Clear Log</button>
+      </div>
+      <div class="rule"></div>
+      <div id="trialList" class="cost-list"><p class="muted">No trials recorded yet.</p></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Chemical Admixture Guidance</h3></div></div>
+    <div class="two-col">
+      <div>
+        <div class="cost-line"><span>Hardening Accelerator</span><span class="badge">Trial Needed</span></div>
+        <p class="muted" style="margin-top:6px;">Calcium chloride or non-chloride hardening accelerators increase early demoulding strength. Always ensure dosage does not exceed manufacturer specs.</p>
+      </div>
+      <div>
+        <div class="cost-line"><span>Water Reducing Plasticizer</span><span class="badge">Trial Needed</span></div>
+        <p class="muted" style="margin-top:6px;">Allows reducing water by 10-15% while improving lubrication in semi-dry presses, reducing corner breakage significantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 7. SETTINGS & CREDITS TAB                                                 -->
+<!-- ========================================================================= -->
+<section id="settings" class="tab-panel hidden">
+  <div class="card" style="margin-bottom:20px;">
+    <h2 style="font-size:18px; margin:0 0 6px;">Application Settings & Credits</h2>
+    <p class="muted" style="margin:0 0 14px;">Configure UI theme, device view simulation, and connect with the developer.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div><h3>Display & Theme Settings</h3><p class="card-sub">Preferences persist in your browser</p></div><span class="badge">UI</span></div>
+      <div class="field-grid">
+        <div class="field full">
+          <label for="themeSelect">Visual Color Theme</label>
+          <select id="themeSelect">
+            <option value="dark" selected>🌙 Matte Dark Mode (High Contrast)</option>
+            <option value="light">☀️ Clean Light Mode</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="deviceSelect">Default View Mode</label>
+          <select id="deviceSelect">
+            <option value="responsive" selected>💻 Responsive Desktop / Auto</option>
+            <option value="mobile">📱 Phone View Frame Simulator</option>
+          </select>
+        </div>
+      </div>
+      <p class="help">Theme settings are saved automatically to your device's local storage.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Developer Credits</h3><p class="card-sub">Industrial engineering & software design</p></div><span class="badge">AUTHOR</span></div>
+      <div class="cost-list">
+        <div class="cost-line"><span>Created & Designed By</span><strong>Dxt3r</strong></div>
+        <div class="cost-line"><span>Official Contact</span><strong>dxsuthar009@gmail.com</strong></div>
+        <div class="cost-line"><span>Application</span><strong>ForgeMix Plant OS v2.4</strong></div>
+      </div>
+      <div class="rule"></div>
+      <div class="button-row">
+        <a href="mailto:dxsuthar009@gmail.com" class="btn primary">📧 Send Email to Dxt3r</a>
+        <button class="btn" onclick="copyText('dxsuthar009@gmail.com', 'Developer email copied!')">📋 Copy Email</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><div><h3>Support & Contributions</h3><p class="card-sub">Help maintain and improve ForgeMix with new features and updates</p></div><span class="badge">DONATE</span></div>
+    <p class="muted" style="margin-top:0;">If this tool saves your plant time, prevents batch losses, or simplifies your daily production calculations, consider supporting the project!</p>
+    
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-top:16px;">
+      <!-- Buy Me a Beer -->
+      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:16px;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:4px;">🍺 Buy Me a Beer</div>
+        <p class="muted" style="font-size:12px; margin:0 0 12px;">Support development and keep the updates rolling.</p>
+        <button class="btn primary" style="width:100%;" onclick="showToast('🍻 Cheers! Thank you for supporting ForgeMix!')">
+          🍺 Buy Me a Beer
+        </button>
+      </div>
+
+      <!-- Google Pay -->
+      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:16px;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:4px;">⚡ Google Pay (UPI)</div>
+        <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--orange2); margin-bottom:10px; word-break:break-all;">
+          dixit.suthar9-2@okhdfcbank
+        </div>
+        <div class="button-row">
+          <a href="upi://pay?pa=dixit.suthar9-2@okhdfcbank&pn=Dixitkumar%20Suthar&cu=INR" class="btn gpay" style="flex:1;">
+            ⚡ Open UPI App
+          </a>
+          <button class="btn" style="flex:1;" onclick="copyText('dixit.suthar9-2@okhdfcbank', 'GPay UPI ID copied to clipboard!')">
+            📋 Copy UPI
+          </button>
+        </div>
+      </div>
+
+      <!-- PayPal -->
+      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:16px;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:4px;">🌍 PayPal International</div>
+        <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-dim); margin-bottom:10px; word-break:break-all;">
+          dixit.suthar9@gmail.com
+        </div>
+        <div class="button-row">
+          <a href="https://paypal.me/dixitsuthar9" target="_blank" rel="noopener noreferrer" class="btn paypal" style="flex:1;">
+            🌍 Send via PayPal
+          </a>
+          <button class="btn" style="flex:1;" onclick="copyText('dixit.suthar9@gmail.com', 'PayPal email copied to clipboard!')">
+            📋 Copy Email
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  FORGEMIX · Industrial Operations Intelligence Suite · Developed by <strong>Dxt3r</strong> (<a href="mailto:dxsuthar009@gmail.com">dxsuthar009@gmail.com</a>)<br>
+  Engineering planning estimates only. Validate all industrial recipes with certified laboratory testing.
+</footer>
+</div>
+
+<!-- Toast Box -->
+<div id="toast" class="toast">Action completed successfully</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT APPLICATION LOGIC                                              -->
+<!-- ========================================================================= -->
+<script>
+const $ = id => document.getElementById(id);
+const num = id => Math.max(0, Number($(id).value) || 0);
+const fmt = (n, d=1) => Number.isFinite(n) ? n.toLocaleString('en-IN', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
+const money = (n, d=2) => '₹' + fmt(n, d);
+const whole = n => Math.round(n).toLocaleString('en-IN');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function setText(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text;
+}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function copyText(str, msg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(str).then(() => showToast(msg || 'Copied to clipboard!'));
+  } else {
+    const input = document.createElement('input');
+    input.value = str;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    showToast(msg || 'Copied to clipboard!');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// VIEW MODE TOGGLE (DESKTOP VS PHONE SIMULATOR)
+// ---------------------------------------------------------------------------
+function toggleViewMode() {
+  const isMobile = document.body.classList.toggle('simulated-mobile');
+  $('viewBtnText').textContent = isMobile ? 'Desktop View' : 'Phone View';
+  $('viewToggleBtn').querySelector('span:first-child').textContent = isMobile ? '💻' : '📱';
+  $('deviceSelect').value = isMobile ? 'mobile' : 'responsive';
+  try { localStorage.setItem('forgemixDevice', isMobile ? 'mobile' : 'responsive'); } catch(e){}
+}
+
+$('deviceSelect').addEventListener('change', (e) => {
+  if (e.target.value === 'mobile') {
+    document.body.classList.add('simulated-mobile');
+    $('viewBtnText').textContent = 'Desktop View';
+    $('viewToggleBtn').querySelector('span:first-child').textContent = '💻';
+  } else {
+    document.body.classList.remove('simulated-mobile');
+    $('viewBtnText').textContent = 'Phone View';
+    $('viewToggleBtn').querySelector('span:first-child').textContent = '📱';
+  }
+  try { localStorage.setItem('forgemixDevice', e.target.value); } catch(err){}
+});
+
+// ---------------------------------------------------------------------------
+// THEME SWITCHER
+// ---------------------------------------------------------------------------
+$('themeSelect').addEventListener('change', (e) => {
+  const theme = e.target.value;
+  document.body.setAttribute('data-theme', theme);
+  try { localStorage.setItem('forgemixTheme', theme); } catch(err){}
+});
+
+// Load saved display preferences
+try {
+  const savedTheme = localStorage.getItem('forgemixTheme');
+  if (savedTheme) {
+    document.body.setAttribute('data-theme', savedTheme);
+    $('themeSelect').value = savedTheme;
+  }
+  const savedDevice = localStorage.getItem('forgemixDevice');
+  if (savedDevice === 'mobile') {
+    document.body.classList.add('simulated-mobile');
+    $('viewBtnText').textContent = 'Desktop View';
+    $('viewToggleBtn').querySelector('span:first-child').textContent = '💻';
+    $('deviceSelect').value = 'mobile';
+  }
+} catch(err){}
+
+// ---------------------------------------------------------------------------
+// TABS NAVIGATION HANDLER
+// ---------------------------------------------------------------------------
+const tabMeta = {
+  dashboard: { eyebrow: 'Fly-ash Bricks Workspace', title: 'Batch Mix & Cost Control', sub: 'Dry batch configuration, cement percentage modes, yield forecasting, and raw material unit economics.' },
+  pavers: { eyebrow: 'Paver Mix Module', title: 'Paver Block Mix & Cost Calculator', sub: 'Model 60 mm and 80 mm paver batches with custom geometry, mix proportions, and side-by-side comparison.' },
+  coverblocks: { eyebrow: 'Cover Blocks Module', title: 'Concrete Cover Block Calculator', sub: 'Estimate yields, cement usage, and raw material cost per cover block for reinforcement bars.' },
+  rmc: { eyebrow: 'RMC Plant Operations', title: 'Ready-Mix Concrete (RMC) Plant OS', sub: 'Compute throughput, absolute-volume mix designs per m³, moisture-adjusted batch sheets, and pricing.' },
+  production: { eyebrow: 'Daily Operations', title: 'Production Demand & Procurement Planner', sub: 'Translate active mix recipes into daily procurement forecasts, mixer hours, and inventory targets.' },
+  optimization: { eyebrow: 'Quality Lab', title: 'Mix Optimization Workbench', sub: 'Record plant trial batches, isolate factors causing edge chipping, and log test compressive strengths.' },
+  settings: { eyebrow: 'Configuration & Info', title: 'Settings & Author Credits', sub: 'Manage visual themes, simulate mobile layouts, view developer credentials, or support the project.' }
+};
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== target));
+    
+    if (tabMeta[target]) {
+      setText('moduleEyebrow', tabMeta[target].eyebrow);
+      setText('moduleTitle', tabMeta[target].title);
+      setText('moduleSub', tabMeta[target].sub);
+    }
+    if (target === 'optimization') {
+      const agg = num('aggregate'), fly = num('flyAsh'), stone = num('stoneDust'), cement = num('cement');
+      setText('baselineText', `${fmt(agg,1)} kg inert aggregate (${fmt(fly,1)} kg fly ash + ${fmt(stone,1)} kg stone dust) and ${fmt(cement,1)} kg cement.`);
+    }
+  });
+});
+
+// ===========================================================================
+// 1. FLY-ASH BRICKS CALCULATION LOGIC
+// ===========================================================================
+const brickStrengthPresets = { lean: 0.053, standard: 0.077, heavy: 0.10 };
+
+function getBrickCalc() {
+  const agg = num('aggregate');
+  const fly = num('flyAsh');
+  const stone = num('stoneDust');
+  const cement = num('cement');
+  const brickW = Math.max(0.001, num('brickWeight'));
+  const total = agg + cement;
+  const inertShare = fly + stone;
+  const rawYield = total / brickW;
+  const override = $('yieldOverride').value.trim();
+  const yieldN = override !== '' ? Math.max(0, Number(override) || 0) : Math.floor(rawYield);
+  const cPct = agg > 0 ? (cement / agg) * 100 : 0;
+  const cementPerBrick = yieldN > 0 ? (cement * 1000) / yieldN : 0;
+  const bagYield = cement > 0 ? (50 / cement) * yieldN : 0;
+  const cementCost = (cement / 50) * num('cementPrice');
+  const flyCost = (fly / 1000) * num('flyAshPrice');
+  const stoneCost = (stone / 1000) * num('stonePrice');
+  const batchCost = cementCost + flyCost + stoneCost;
+  const perBrick = yieldN > 0 ? batchCost / yieldN : 0;
+  return { agg, fly, stone, cement, brickW, total, inertShare, rawYield, yieldN, cPct, cementPerBrick, bagYield, cementCost, flyCost, stoneCost, batchCost, perBrick, splitDiff: inertShare - agg };
+}
+
+function updateBrickPresetButtons() {
+  const currentAgg = num('aggregate');
+  document.querySelectorAll('#brickPresets [data-aggregate]').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.aggregate) === currentAgg);
+  });
+}
+
+function renderBrickDashboard() {
+  const c = getBrickCalc();
+  setText('mTotal', fmt(c.total, 1) + ' kg');
+  setText('mPercent', fmt(c.cPct, 2) + '%');
+  setText('mYield', whole(c.yieldN) + ' bricks');
+  setText('mCementBrick', fmt(c.yieldN ? c.cementPerBrick : 0, 0) + ' g');
+  setText('mBagYield', fmt(c.bagYield, 0) + ' bricks / bag');
+
+  const mode = $('strengthMode').value;
+  setText('mPreset', mode === 'custom' ? 'Custom Setting' : `Preset: ${(brickStrengthPresets[mode] * 100).toFixed(1)}% of inert`);
+  setText('splitValue', `${fmt(c.inertShare, 1)} / ${fmt(c.agg, 1)} kg`);
+
+  const aggDiff = Math.abs(c.splitDiff);
+  const checkEl = $('aggregateCheck');
+  if (aggDiff < 0.05) {
+    checkEl.textContent = '✓ Inert split perfectly matches aggregate total.';
+    checkEl.style.color = 'var(--green)';
+  } else {
+    checkEl.textContent = `⚠ Split differs by ${fmt(c.splitDiff, 1)} kg from total aggregate.`;
+    checkEl.style.color = 'var(--yellow)';
+  }
+
+  setText('cementCostBrick', money(c.yieldN ? c.cementCost / c.yieldN : 0));
+  setText('flyCostBrick', money(c.yieldN ? c.flyCost / c.yieldN : 0));
+  setText('stoneCostBrick', money(c.yieldN ? c.stoneCost / c.yieldN : 0));
+  setText('batchCost', money(c.batchCost, 0));
+  setText('totalCostBrick', money(c.perBrick));
+
+  const items = [
+    { label: 'Fly ash', val: c.fly },
+    { label: 'Stone dust / grit', val: c.stone },
+    { label: 'Cement', val: c.cement }
+  ];
+  $('compositionBars').innerHTML = items.map(item => {
+    const pct = c.total > 0 ? (item.val / c.total) * 100 : 0;
+    return `
+      <div class="bar-row">
+        <div class="bar-meta"><span>${item.label}</span><span>${fmt(item.val, 1)} kg · ${fmt(pct, 1)}%</span></div>
+        <div class="bar"><span style="width:${Math.min(100, pct)}%"></span></div>
+      </div>
+    `;
+  }).join('');
+
+  const rows = [
+    ['Fly ash', `${fmt(c.fly, 1)} kg`, `${fmt(c.total ? (c.fly/c.total)*100 : 0, 1)}%`, money(c.flyCost, 0)],
+    ['Stone dust / grit', `${fmt(c.stone, 1)} kg`, `${fmt(c.total ? (c.stone/c.total)*100 : 0, 1)}%`, money(c.stoneCost, 0)],
+    ['Cement', `${fmt(c.cement, 1)} kg`, `${fmt(c.cPct, 2)}% inert`, money(c.cementCost, 0)],
+    ['Total Dry Batch', `${fmt(c.total, 1)} kg`, '100%', money(c.batchCost, 0)],
+    ['Estimated Yield', `${whole(c.yieldN)} bricks`, `${fmt(c.brickW, 2)} kg / brick`, '—'],
+    ['Cement Intensity', `${fmt(c.cementPerBrick, 0)} g / brick`, `${fmt(c.bagYield, 0)} bricks / bag`, '—']
+  ];
+  $('summaryTable').innerHTML = rows.map(r => `<tr>${r.map(x => `<td>${x}</td>`).join('')}</tr>`).join('');
+
+  updateBrickPresetButtons();
+  renderProductionPlanner();
+}
+
+function setCementFromMode() {
+  const mode = $('strengthMode').value;
+  if (mode !== 'custom') {
+    $('cement').value = (num('aggregate') * (brickStrengthPresets[mode] || 0)).toFixed(2);
+    $('cement').disabled = true;
+  } else {
+    $('cement').disabled = false;
+  }
+  renderBrickDashboard();
+}
+
+document.querySelectorAll('#brickPresets [data-aggregate]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $('aggregate').value = btn.dataset.aggregate;
+    setCementFromMode();
+  });
+});
+
+$('customPreset').addEventListener('click', () => {
+  document.querySelectorAll('#brickPresets .preset').forEach(b => b.classList.remove('active'));
+  $('customPreset').classList.add('active');
+  $('aggregate').focus();
+});
+
+$('strengthMode').addEventListener('change', setCementFromMode);
+
+['aggregate','flyAsh','stoneDust','cement','brickWeight','yieldOverride','cementPrice','flyAshPrice','stonePrice'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    if (id === 'aggregate' && $('strengthMode').value !== 'custom') {
+      $('cement').value = (num('aggregate') * brickStrengthPresets[$('strengthMode').value]).toFixed(2);
+    }
+    renderBrickDashboard();
+  });
+});
+
+$('exportCsv').addEventListener('click', () => {
+  const c = getBrickCalc();
+  const rows = [
+    ['ForgeMix Fly-ash Brick Batch Summary'],
+    ['Metric', 'Value'],
+    ['Aggregate Total kg', c.agg],
+    ['Fly Ash kg', c.fly],
+    ['Stone Dust kg', c.stone],
+    ['Cement kg', c.cement],
+    ['Total Dry Batch kg', c.total],
+    ['Cement % of Inert', c.cPct.toFixed(2)],
+    ['Dry Brick Weight kg', c.brickW],
+    ['Yield per Batch', c.yieldN],
+    ['Cement Grams per Brick', c.cementPerBrick.toFixed(1)],
+    ['Batch Raw Cost INR', c.batchCost.toFixed(2)],
+    ['Cost per Brick INR', c.perBrick.toFixed(2)]
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'forgemix-flyash-bricks.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ===========================================================================
+// 2. PAVER BLOCK CALCULATIONS
+// ===========================================================================
+function paverData(thicknessOverride) {
+  const length=Math.max(1,num('paverLength')), width=Math.max(1,num('paverWidth')), thick=thicknessOverride||Math.max(1,num('paverThickness')), density=Math.max(500,num('paverDensity')), batch=Math.max(1,num('paverBatchMass'));
+  const volume=(length/1000)*(width/1000)*(thick/1000), blockMass=volume*density, yieldN=blockMass>0?Math.floor(batch/blockMass):0;
+  const pct={cement:num('paverCementPct'),fly:num('paverFlyPct'),stone:num('paverStonePct'),grit:num('paverGritPct')}, pctTotal=pct.cement+pct.fly+pct.stone+pct.grit;
+  const mass={cement:batch*pct.cement/100,fly:batch*pct.fly/100,stone:batch*pct.stone/100,grit:batch*pct.grit/100}, water=batch*num('paverWaterPct')/100;
+  const costs={cement:mass.cement/50*num('cementPrice'),fly:mass.fly/1000*num('flyAshPrice'),stone:mass.stone/1000*num('stonePrice'),grit:mass.grit/1000*num('paverGritPrice')}, totalCost=Object.values(costs).reduce((a,b)=>a+b,0);
+  const rejects=Math.min(99.9,num('paverRejectPct')), saleable=yieldN*(1-rejects/100);
+  const topShare=Math.min(100,Math.max(0,num('paverTopLayerPct')))/100, topBatch=batch*topShare, bottomBatch=batch-topBatch;
+  const topPct={cement:num('paverTopCementPct'),stone:num('paverTopStonePct'),grit:num('paverTopGritPct')}, topPctTotal=topPct.cement+topPct.stone+topPct.grit;
+  const topMass={cement:topBatch*topPct.cement/100,stone:topBatch*topPct.stone/100,grit:topBatch*topPct.grit/100}, topWater=topBatch*num('paverTopWaterPct')/100;
+  const topCosts={cement:topMass.cement/50*num('cementPrice'),stone:topMass.stone/1000*num('stonePrice'),grit:topMass.grit/1000*num('paverGritPrice')}, topCost=Object.values(topCosts).reduce((a,b)=>a+b,0);
+  const bottomMass={cement:bottomBatch*pct.cement/100,fly:bottomBatch*pct.fly/100,stone:bottomBatch*pct.stone/100,grit:bottomBatch*pct.grit/100}, bottomWater=bottomBatch*num('paverWaterPct')/100;
+  const bottomCosts={cement:bottomMass.cement/50*num('cementPrice'),fly:bottomMass.fly/1000*num('flyAshPrice'),stone:bottomMass.stone/1000*num('stonePrice'),grit:bottomMass.grit/1000*num('paverGritPrice')}, bottomCost=Object.values(bottomCosts).reduce((a,b)=>a+b,0), combinedCost=topCost+bottomCost;
+  return {length,width,thick,density,batch,volume,blockMass,yieldN,pct,pctTotal,mass,water,costs,totalCost,rejects,saleable,costEach:saleable>0?combinedCost/saleable:0,topShare,topBatch,bottomBatch,topPct,topPctTotal,topMass,topWater,topCosts,topCost,bottomMass,bottomWater,bottomCosts,bottomCost,combinedCost};
+}
+function renderPavers() {
+  const p = paverData();
+  setText('paverPctTotal', fmt(p.pctTotal, 1) + '%');
+  const pctOk = Math.abs(p.pctTotal - 100) < 0.05;
+  const warnEl = $('paverPctWarning');
+  if (pctOk) {
+    warnEl.textContent = '✓ Recipe proportions sum to 100%.';
+    warnEl.style.color = 'var(--green)';
+  } else {
+    warnEl.textContent = `⚠ Proportions sum to ${fmt(p.pctTotal, 1)}%. Adjust to equal 100%.`;
+    warnEl.style.color = 'var(--yellow)';
+  }
+
+  setText('paverYield', whole(p.yieldN) + ' pavers');
+  setText('paverBlockMass', fmt(p.blockMass, 2) + ' kg');
+  setText('paverCementKg', fmt(p.mass.cement, 1) + ' kg');
+  setText('paverCementBags', fmt(p.mass.cement / 50, 2) + ' bags (50kg)');
+  setText('paverWaterLitres', fmt(p.water, 1) + ' L');
+
+  const matRows = [
+    ['Cement', p.mass.cement, 'kg'],
+    ['Fly ash', p.mass.fly, 'kg'],
+    ['Stone dust / sand', p.mass.stone, 'kg'],
+    ['Graded grit (6-10mm)', p.mass.grit, 'kg'],
+    ['Water estimate', p.water, 'L']
+  ];
+  $('paverMaterialList').innerHTML = matRows.map(([name, val, unit]) => `
+    <div class="cost-line"><span>${name}</span><strong>${fmt(val, 1)} ${unit}</strong></div>
+  `).join('');
+
+  const costRows = [
+    ['Cement', p.costs.cement],
+    ['Fly ash', p.costs.fly],
+    ['Stone dust / sand', p.costs.stone],
+    ['Graded grit', p.costs.grit],
+    ['Total Batch Raw Cost', p.totalCost]
+  ];
+  $('paverCostList').innerHTML = costRows.map(([name, val]) => `
+    <div class="cost-line"><span>${name}</span><strong>${money(val, 0)}</strong></div>
+  `).join('');
+  setText('paverCostEach', money(p.costEach));
+
+  setText('paverTopPctTotal', fmt(p.topPctTotal,1)+'%');
+  const topWarn=$('paverTopPctWarning'); if(Math.abs(p.topPctTotal-100)<0.05){topWarn.textContent='✓ Top recipe proportions sum to 100%.';topWarn.style.color='var(--green)';}else{topWarn.textContent='⚠ Top recipe sums to '+fmt(p.topPctTotal,1)+'%.';topWarn.style.color='var(--yellow)';}
+  const layerRows=(m,w)=>[['Cement',m.cement,'kg'],['Fly ash',m.fly||0,'kg'],['Stone dust / sand',m.stone,'kg'],['Graded grit',m.grit,'kg'],['Water',w,'L']];
+  $('paverTopLayerList').innerHTML=layerRows(p.topMass,p.topWater).map(([n,v,u])=>`<div class="cost-line"><span>${n}</span><strong>${fmt(v,1)} ${u}</strong></div>`).join('');
+  $('paverBottomLayerList').innerHTML=layerRows(p.bottomMass,p.bottomWater).map(([n,v,u])=>`<div class="cost-line"><span>${n}</span><strong>${fmt(v,1)} ${u}</strong></div>`).join('');
+  setText('paverCombinedCost', money(p.combinedCost,0));
+
+  // Compare 60 vs 80
+  const comp = [60, 80].map(t => {
+    const d = paverData(t);
+    return `
+      <tr>
+        <td><strong>${t} mm</strong></td>
+        <td>${fmt(d.volume * 1e6, 0)} cm³</td>
+        <td>${fmt(d.blockMass, 2)} kg</td>
+        <td>${whole(d.yieldN)}</td>
+        <td>${fmt(d.yieldN ? (d.mass.cement / d.yieldN) * 1000 : 0, 0)} g</td>
+        <td><strong>${money(d.costEach)}</strong></td>
+      </tr>
+    `;
+  });
+  $('paverCompareTable').innerHTML = comp.join('');
+
+  // Update button active state
+  const currentThick = num('paverThickness');
+  document.querySelectorAll('#paverPresets [data-paver-thickness]').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.paverThickness) === currentThick);
+  });
+}
+
+document.querySelectorAll('#paverPresets [data-paver-thickness]').forEach(b => {
+  b.addEventListener('click', () => {
+    $('paverThickness').value = b.dataset.paverThickness;
+    renderPavers();
+  });
+});
+
+$('paverCustomBtn').addEventListener('click', () => {
+  document.querySelectorAll('#paverPresets .preset').forEach(b => b.classList.remove('active'));
+  $('paverCustomBtn').classList.add('active');
+  $('paverThickness').focus();
+});
+
+['paverLength','paverWidth','paverThickness','paverDensity','paverBatchMass','paverTopLayerPct','paverTopThickness','paverTopCementPct','paverTopStonePct','paverTopGritPct','paverTopWaterPct','paverCementPct','paverFlyPct','paverStonePct','paverGritPct','paverWaterPct','paverGritPrice','paverRejectPct','cementPrice','flyAshPrice','stonePrice'].forEach(id => {
+  $(id).addEventListener('input', renderPavers);
+});
+
+// ===========================================================================
+// 3. COVER BLOCK CALCULATIONS
+// ===========================================================================
+function coverData() {
+  const length = Math.max(1, num('coverLength'));
+  const width = Math.max(1, num('coverWidth'));
+  const height = Math.max(1, num('coverHeight'));
+  const density = Math.max(500, num('coverDensity'));
+  const batch = Math.max(1, num('coverBatchMass'));
+  const allowance = Math.min(80, num('coverCavity')) / 100;
+  const volume = (length / 1000) * (width / 1000) * (height / 1000) * (1 - allowance);
+  const blockMass = volume * density;
+  const yieldN = blockMass > 0 ? Math.floor(batch / blockMass) : 0;
+  const pct = {
+    cement: num('coverCementPct'),
+    fly: num('coverFlyPct'),
+    sand: num('coverSandPct'),
+    grit: num('coverGritPct')
+  };
+  const pctTotal = pct.cement + pct.fly + pct.sand + pct.grit;
+  const mass = {
+    cement: (batch * pct.cement) / 100,
+    fly: (batch * pct.fly) / 100,
+    sand: (batch * pct.sand) / 100,
+    grit: (batch * pct.grit) / 100
+  };
+  const water = (batch * num('coverWaterPct')) / 100;
+  const costs = {
+    cement: (mass.cement / 50) * num('cementPrice'),
+    fly: (mass.fly / 1000) * num('flyAshPrice'),
+    sand: (mass.sand / 1000) * num('stonePrice'),
+    grit: (mass.grit / 1000) * num('coverGritPrice')
+  };
+  const totalCost = Object.values(costs).reduce((a, b) => a + b, 0);
+  const rejects = Math.min(99.9, num('coverRejectPct'));
+  const saleable = yieldN * (1 - rejects / 100);
+  return { length, width, height, density, batch, volume, blockMass, yieldN, pct, pctTotal, mass, water, costs, totalCost, rejects, saleable, costEach: saleable > 0 ? totalCost / saleable : 0 };
+}
+
+function renderCoverBlocks() {
+  const c = coverData();
+  setText('coverPctTotal', fmt(c.pctTotal, 1) + '%');
+  const pctOk = Math.abs(c.pctTotal - 100) < 0.05;
+  const warnEl = $('coverPctWarning');
+  if (pctOk) {
+    warnEl.textContent = '✓ Recipe proportions sum to 100%.';
+    warnEl.style.color = 'var(--green)';
+  } else {
+    warnEl.textContent = `⚠ Proportions sum to ${fmt(c.pctTotal, 1)}%.`;
+    warnEl.style.color = 'var(--yellow)';
+  }
+
+  setText('coverYield', whole(c.yieldN) + ' pcs');
+  setText('coverBlockMass', fmt(c.blockMass, 3) + ' kg');
+  setText('coverCementKg', fmt(c.mass.cement, 1) + ' kg');
+  setText('coverBagCount', fmt(c.mass.cement / 50, 2) + ' bags (50kg)');
+  setText('coverWaterLitres', fmt(c.water, 1) + ' L');
+
+  const matRows = [
+    ['Cement', c.mass.cement, 'kg'],
+    ['Fly ash', c.mass.fly, 'kg'],
+    ['Sand / Stone dust', c.mass.sand, 'kg'],
+    ['Fine grit', c.mass.grit, 'kg'],
+    ['Water estimate', c.water, 'L']
+  ];
+  $('coverMaterialList').innerHTML = matRows.map(([name, val, u]) => `
+    <div class="cost-line"><span>${name}</span><strong>${fmt(val, 1)} ${u}</strong></div>
+  `).join('');
+
+  const costRows = [
+    ['Cement', c.costs.cement],
+    ['Fly ash', c.costs.fly],
+    ['Sand / stone dust', c.costs.sand],
+    ['Fine grit', c.costs.grit],
+    ['Total Batch Raw Cost', c.totalCost]
+  ];
+  $('coverCostList').innerHTML = costRows.map(([name, val]) => `
+    <div class="cost-line"><span>${name}</span><strong>${money(val, 0)}</strong></div>
+  `).join('');
+  setText('coverCostEach', money(c.costEach));
+
+  // Daily demand
+  const target = Math.max(1, num('coverDailyTarget'));
+  const batches = c.yieldN > 0 ? Math.ceil(target / c.yieldN) : 0;
+  $('coverDailyBatches').value = whole(batches) + ' batches';
+  $('coverDailyCement').value = whole(Math.ceil((batches * c.mass.cement) / 50)) + ' bags';
+  $('coverDailyCost').value = money(batches * c.totalCost, 0);
+
+  // Update preset buttons
+  const currentHeight = num('coverHeight');
+  document.querySelectorAll('#coverPresets [data-cover-preset]').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.coverPreset) === currentHeight);
+  });
+}
+
+document.querySelectorAll('#coverPresets [data-cover-preset]').forEach(b => {
+  b.addEventListener('click', () => {
+    $('coverHeight').value = b.dataset.coverPreset;
+    renderCoverBlocks();
+  });
+});
+
+$('coverCustomBtn').addEventListener('click', () => {
+  document.querySelectorAll('#coverPresets .preset').forEach(b => b.classList.remove('active'));
+  $('coverCustomBtn').classList.add('active');
+  $('coverHeight').focus();
+});
+
+['coverLength','coverWidth','coverHeight','coverDensity','coverBatchMass','coverCavity','coverCementPct','coverFlyPct','coverSandPct','coverGritPct','coverWaterPct','coverGritPrice','coverRejectPct','coverDailyTarget','cementPrice','flyAshPrice','stonePrice'].forEach(id => {
+  $(id).addEventListener('input', renderCoverBlocks);
+});
+
+// ===========================================================================
+// 4. RMC PLANT CALCULATIONS
+// ===========================================================================
+const rmcGradePresets = {
+  M20: { strength: 20, binder: 320, water: 180 },
+  M25: { strength: 25, binder: 350, water: 175 },
+  M30: { strength: 30, binder: 380, water: 170 },
+  M35: { strength: 35, binder: 400, water: 165 },
+  M40: { strength: 40, binder: 420, water: 160 },
+  M45: { strength: 45, binder: 440, water: 155 },
+  M50: { strength: 50, binder: 460, water: 150 }
+};
+
+function rmcData() {
+  const cap = num('rmcCapacity');
+  const util = Math.min(100, num('rmcUtil')) / 100;
+  const shift = num('rmcShift');
+  const dispatch = num('rmcDispatch');
+  const truck = Math.max(0.001, num('rmcTruck'));
+  const batchVol = Math.max(0.001, num('rmcBatchVol'));
+  const downtime = Math.min(100, num('rmcDowntime')) / 100;
+
+  const effective = cap * util * (1 - downtime);
+  const shiftCap = effective * shift;
+  const surplus = shiftCap - dispatch;
+  const trucks = Math.ceil(dispatch / truck);
+  const mixerBatches = Math.ceil(dispatch / batchVol);
+  const prodHours = effective > 0 ? dispatch / effective : 0;
+
+  const binder = num('rmcBinder');
+  const flyPct = Math.min(100, num('rmcFlyPct')) / 100;
+  const cement = binder * (1 - flyPct);
+  const fly = binder * flyPct;
+  const water = num('rmcWater');
+  const coarsePct = Math.min(100, num('rmcCoarsePct')) / 100;
+  const air = Math.min(20, num('rmcAir')) / 100;
+  const admix = (binder * num('rmcAdmix')) / 100;
+
+  const cSG = Math.max(0.1, num('rmcCementSG'));
+  const fSG = Math.max(0.1, num('rmcFlySG'));
+  const fineSG = Math.max(0.1, num('rmcFineSG'));
+  const coarseSG = Math.max(0.1, num('rmcCoarseSG'));
+
+  const cementVol = cement / (cSG * 1000);
+  const flyVol = fly / (fSG * 1000);
+  const waterVol = water / 1000;
+  const admixVol = admix / (1.1 * 1000);
+  const available = 1 - air - cementVol - flyVol - waterVol - admixVol;
+  const aggVol = Math.max(0, available);
+  const fineVol = aggVol * (1 - coarsePct);
+  const coarseVol = aggVol * coarsePct;
+  const fine = fineVol * fineSG * 1000;
+  const coarse = coarseVol * coarseSG * 1000;
+
+  const fineMoist = Math.min(30, num('rmcFineMoist')) / 100;
+  const fineAbs = Math.min(30, num('rmcFineAbs')) / 100;
+  const coarseMoist = Math.min(30, num('rmcCoarseMoist')) / 100;
+  const coarseAbs = Math.min(30, num('rmcCoarseAbs')) / 100;
+
+  const surfaceWater = Math.max(0, fine * (fineMoist - fineAbs)) + Math.max(0, coarse * (coarseMoist - coarseAbs));
+  const waterToAdd = Math.max(0, water - surfaceWater);
+  const balance = cementVol + flyVol + waterVol + admixVol + air + fineVol + coarseVol;
+  const wb = binder > 0 ? water / binder : 0;
+  const volumeValid = available >= 0 && balance <= 1.001;
+
+  const batch = num('rmcBatchVolume');
+  const prices = {
+    cement: num('rmcCementPrice'),
+    fly: num('rmcFlyPrice'),
+    fine: num('rmcFinePrice'),
+    coarse: num('rmcCoarsePrice'),
+    water: num('rmcWaterPrice'),
+    admix: num('rmcAdmixPrice')
+  };
+  const costs = {
+    cement: (cement / 50) * prices.cement,
+    fly: fly * prices.fly,
+    fine: fine * prices.fine,
+    coarse: coarse * prices.coarse,
+    water: (water / 1000) * prices.water,
+    admix: admix * prices.admix
+  };
+  const raw = Object.values(costs).reduce((a, b) => a + b, 0);
+  const loaded = raw + num('rmcOverheads');
+  const waste = 1 + Math.min(30, num('rmcWastage')) / 100;
+  const margin = num('rmcMargin') / 100;
+  const sell = $('rmcMarginType').value === 'margin'
+    ? (margin < 1 ? (loaded * waste) / (1 - margin) : Infinity)
+    : loaded * waste * (1 + margin);
+
+  return {
+    cap, effective, shiftCap, surplus, trucks, mixerBatches, prodHours, dispatch, truck, batchVol,
+    binder, cement, fly, water, waterToAdd, surfaceWater, admix, fine, coarse, balance, wb,
+    volumeValid, available, batch, costs, raw, loaded, sell, waste, margin
+  };
+}
+
+function renderRMC() {
+  const d = rmcData();
+  const capLines = [
+    ['Rated Plant Capacity', fmt(d.cap, 1) + ' m³ / hr'],
+    ['Effective Practical Capacity', fmt(d.effective, 1) + ' m³ / hr'],
+    ['Practical Shift Capacity', fmt(d.shiftCap, 1) + ' m³ / day'],
+    ['Surplus / Shortfall', (d.surplus >= 0 ? '+' : '') + fmt(d.surplus, 1) + ' m³ / day'],
+    ['Transit Mixer Truckloads', whole(d.trucks) + ' trips'],
+    ['Pan Mixer Batches', whole(d.mixerBatches) + ' batches'],
+    ['Estimated Production Time', fmt(d.prodHours, 1) + ' hours']
+  ];
+  $('rmcCapacityList').innerHTML = capLines.map(([a, b]) => `
+    <div class="cost-line"><span>${a}</span><strong>${b}</strong></div>
+  `).join('');
+
+  const warnEl = $('rmcCapacityWarning');
+  if (d.surplus >= 0) {
+    warnEl.textContent = '✓ Plant capacity comfortably covers dispatch requirement.';
+    warnEl.style.color = 'var(--green)';
+  } else {
+    warnEl.textContent = `⚠ Capacity shortfall of ${fmt(Math.abs(d.surplus), 1)} m³/day. Consider overtime or higher batch volume.`;
+    warnEl.style.color = 'var(--yellow)';
+  }
+
+  setText('rmcCementOut', fmt(d.cement, 1));
+  setText('rmcFlyOut', fmt(d.fly, 1));
+  setText('rmcFineOut', fmt(d.fine, 1));
+  setText('rmcCoarseOut', fmt(d.coarse, 1));
+
+  const mixLines = [
+    ['Cement', fmt(d.cement, 1) + ' kg/m³'],
+    ['Fly ash', fmt(d.fly, 1) + ' kg/m³'],
+    ['Fine aggregate (dry)', fmt(d.fine, 1) + ' kg/m³'],
+    ['Coarse aggregate (dry)', fmt(d.coarse, 1) + ' kg/m³'],
+    ['Effective water', fmt(d.water, 1) + ' L/m³'],
+    ['Surface water deduction', fmt(d.surfaceWater, 1) + ' L/m³'],
+    ['Water to add at plant', fmt(d.waterToAdd, 1) + ' L/m³'],
+    ['Admixture dosage', fmt(d.admix, 2) + ' kg/m³'],
+    ['Water / Binder ratio', fmt(d.wb, 2)],
+    ['Aggregate absolute volume', fmt(d.available, 3) + ' m³']
+  ];
+  $('rmcMixList').innerHTML = mixLines.map(([a, b]) => `
+    <div class="cost-line"><span>${a}</span><strong>${b}</strong></div>
+  `).join('');
+
+  const bv = d.batch;
+  const batchLines = [
+    ['Cement', fmt(d.cement * bv, 1) + ' kg'],
+    ['Fly ash', fmt(d.fly * bv, 1) + ' kg'],
+    ['Fine aggregate', fmt(d.fine * bv, 1) + ' kg'],
+    ['Coarse aggregate', fmt(d.coarse * bv, 1) + ' kg'],
+    ['Water to add', fmt(d.waterToAdd * bv, 1) + ' L'],
+    ['Admixture', fmt(d.admix * bv, 2) + ' kg']
+  ];
+  $('rmcBatchList').innerHTML = batchLines.map(([a, b]) => `
+    <div class="cost-line"><span>${a}</span><strong>${b}</strong></div>
+  `).join('');
+
+  setText('rmcRawCost', money(d.raw, 0));
+  setText('rmcLoadedCost', money(d.loaded, 0));
+  setText('rmcSellPrice', Number.isFinite(d.sell) ? money(d.sell, 0) : '—');
+  setText('rmcDailyCost', money(d.raw * d.dispatch, 0));
+
+  const maxWb = num('rmcMaxWb');
+  const wbOk = d.wb <= maxWb;
+  const mixWarn = $('rmcMixWarning');
+  if (!d.volumeValid) {
+    mixWarn.textContent = '⚠ Invalid absolute volume balance. Check aggregate specific gravity or air content.';
+    mixWarn.style.color = 'var(--red)';
+  } else if (!wbOk) {
+    mixWarn.textContent = `⚠ Water-to-binder ratio (${fmt(d.wb, 2)}) exceeds maximum specified limit (${fmt(maxWb, 2)}).`;
+    mixWarn.style.color = 'var(--yellow)';
+  } else {
+    mixWarn.textContent = '✓ Mix design balance and W/B ratio are physically valid.';
+    mixWarn.style.color = 'var(--green)';
+  }
+}
+
+$('rmcGrade').addEventListener('change', () => {
+  const p = rmcGradePresets[$('rmcGrade').value];
+  if (p) {
+    $('rmcStrength').value = p.strength;
+    $('rmcBinder').value = p.binder;
+    $('rmcWater').value = p.water;
+  }
+  renderRMC();
+});
+
+['rmcCapacity','rmcUtil','rmcShift','rmcDispatch','rmcTruck','rmcBatchVol','rmcDowntime','rmcStrength','rmcBinder','rmcFlyPct','rmcWater','rmcCoarsePct','rmcFineMoist','rmcFineAbs','rmcCoarseMoist','rmcCoarseAbs','rmcAdmix','rmcAir','rmcCementSG','rmcFlySG','rmcFineSG','rmcCoarseSG','rmcMaxWb','rmcBatchVolume','rmcCementPrice','rmcFlyPrice','rmcFinePrice','rmcCoarsePrice','rmcWaterPrice','rmcAdmixPrice','rmcOverheads','rmcWastage','rmcMargin'].forEach(id => {
+  $(id).addEventListener('input', renderRMC);
+});
+$('rmcMarginType').addEventListener('change', renderRMC);
+
+$('rmcExport').addEventListener('click', () => {
+  const d = rmcData();
+  const rows = [
+    ['ForgeMix RMC Plant Summary'],
+    ['Metric', 'Value'],
+    ['Grade', $('rmcGrade').value],
+    ['Target Strength MPa', $('rmcStrength').value],
+    ['Cement kg/m3', d.cement.toFixed(1)],
+    ['Fly Ash kg/m3', d.fly.toFixed(1)],
+    ['Fine Agg kg/m3', d.fine.toFixed(1)],
+    ['Coarse Agg kg/m3', d.coarse.toFixed(1)],
+    ['Water to Add L/m3', d.waterToAdd.toFixed(1)],
+    ['Raw Cost per m3 INR', d.raw.toFixed(2)],
+    ['Selling Price per m3 INR', d.sell.toFixed(2)],
+    ['Daily Dispatch m3', d.dispatch],
+    ['Total Daily Raw Material Spend INR', (d.raw * d.dispatch).toFixed(2)]
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'forgemix-rmc-summary.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ===========================================================================
+// 5. PRODUCTION PLANNER CALCULATIONS
+// ===========================================================================
+function renderProductionPlanner() {
+  const c = getBrickCalc();
+  const target = Math.max(1, num('dailyTarget'));
+  const override = $('dailyBatches').value.trim();
+  const batches = override !== '' ? Math.max(1, Math.ceil(Number(override) || 1)) : (c.yieldN > 0 ? Math.ceil(target / c.yieldN) : 0);
+  const dailyYield = batches * c.yieldN;
+  const cementKg = batches * c.cement;
+  const flyKg = batches * c.fly;
+  const stoneKg = batches * c.stone;
+  const dryKg = batches * c.total;
+  const water = (dryKg * num('moisture')) / 100;
+  const bags = Math.ceil(cementKg / 50);
+  const cost = batches * c.batchCost;
+
+  setText('pBatches', whole(batches));
+  setText('pBags', whole(bags));
+  setText('pTons', fmt(dryKg / 1000, 2) + ' MT');
+  setText('pWater', whole(water) + ' L');
+
+  const matRows = [
+    ['Planned Output', `${whole(dailyYield)} bricks`],
+    ['Cement Required', `${fmt(cementKg, 1)} kg (${bags} bags)`],
+    ['Fly Ash Required', `${fmt(flyKg / 1000, 2)} MT`],
+    ['Stone Dust / Grit Required', `${fmt(stoneKg / 1000, 2)} MT`],
+    ['Total Dry Materials', `${fmt(dryKg / 1000, 2)} MT`],
+    ['Water Addition Estimate', `${whole(water)} L`]
+  ];
+  $('dailyMaterials').innerHTML = matRows.map(([a, b]) => `
+    <div class="cost-line"><span>${a}</span><strong>${b}</strong></div>
+  `).join('');
+
+  setText('dailyCost', money(cost, 0));
+  const costLines = [
+    ['Cement Budget', money(batches * c.cementCost, 0)],
+    ['Fly Ash Budget', money(batches * c.flyCost, 0)],
+    ['Stone Dust Budget', money(batches * c.stoneCost, 0)],
+    ['Raw Material Cost / Brick', money(dailyYield ? cost / dailyYield : 0)]
+  ];
+  $('dailyCostLines').innerHTML = costLines.map(([a, b]) => `
+    <div class="cost-line"><span>${a}</span><strong>${b}</strong></div>
+  `).join('');
+
+  const rate = Math.max(0.1, num('batchesPerHour'));
+  setText('runtime', fmt(batches / rate, 1) + ' hours');
+
+  // Scenarios
+  const scenarios = [5000, 10000, 15000, 20000];
+  $('scenarioTable').innerHTML = scenarios.map(t => {
+    const b = c.yieldN > 0 ? Math.ceil(t / c.yieldN) : 0;
+    const cBags = Math.ceil((b * c.cement) / 50);
+    const flyMT = (b * c.fly) / 1000;
+    const stoneMT = (b * c.stone) / 1000;
+    const wL = (b * c.total * num('moisture')) / 100;
+    const costT = b * c.batchCost;
+    return `
+      <tr>
+        <td><strong>${whole(t)}</strong></td>
+        <td>${whole(b)}</td>
+        <td>${whole(cBags)} bags</td>
+        <td>${fmt(flyMT, 2)}</td>
+        <td>${fmt(stoneMT, 2)}</td>
+        <td>${whole(wL)}</td>
+        <td><strong>${money(costT, 0)}</strong></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+['dailyTarget','dailyBatches','moisture','batchesPerHour'].forEach(id => {
+  $(id).addEventListener('input', renderProductionPlanner);
+});
+
+// ===========================================================================
+// 6. OPTIMIZATION LAB TRIAL LOG
+// ===========================================================================
+let trials = [];
+try {
+  trials = JSON.parse(localStorage.getItem('forgemixTrials') || '[]');
+  if (!Array.isArray(trials)) trials = [];
+} catch(e) { trials = []; }
+
+function renderTrials() {
+  const container = $('trialList');
+  if (!trials.length) {
+    container.innerHTML = '<p class="muted">No trial records saved yet.</p>';
+    return;
+  }
+  container.innerHTML = trials.slice().reverse().map((t, idx) => `
+    <div class="cost-line" style="display:block; padding:10px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>${esc(t.id)}</strong>
+        <span class="badge">${fmt(t.moisture, 1)}% Moisture · ${fmt(t.cement, 1)} kg Cement</span>
+      </div>
+      <div class="muted" style="font-size:11.5px; margin-top:4px;">${esc(t.notes || 'No notes logged')}</div>
+    </div>
+  `).join('');
+}
+
+$('saveTrial').addEventListener('click', () => {
+  const trialId = $('trialId').value.trim() || `T-${String(trials.length + 1).padStart(3, '0')}`;
+  trials.push({
+    id: trialId,
+    moisture: num('trialMoisture'),
+    fly: num('trialFlyShare'),
+    cement: num('trialCementKg'),
+    notes: $('trialNotes').value.trim(),
+    time: new Date().toISOString()
+  });
+  try { localStorage.setItem('forgemixTrials', JSON.stringify(trials)); } catch(e){}
+  renderTrials();
+  showToast(`Trial ${trialId} recorded!`);
+  $('trialId').value = `T-${String(trials.length + 1).padStart(3, '0')}`;
+  $('trialNotes').value = '';
+});
+
+$('clearTrials').addEventListener('click', () => {
+  if (confirm('Clear all trial logs?')) {
+    trials = [];
+    try { localStorage.removeItem('forgemixTrials'); } catch(e){}
+    renderTrials();
+    showToast('Trial log cleared');
+  }
+});
+
+// ---------------------------------------------------------------------------
+// INITIALIZATION ON LOAD
+// ---------------------------------------------------------------------------
+setCementFromMode();
+renderPavers();
+renderCoverBlocks();
+renderRMC();
+renderProductionPlanner();
+renderTrials();
+// Recipe mode + build snapshots
+const BUILD_VERSION = '1.1.0';
+const recipeModules = {
+ dashboard: ['aggregate','flyAsh','stoneDust','strengthMode','cement','brickWeight','yieldOverride','cementPrice','flyAshPrice','stonePrice'],
+ pavers: ['paverLength','paverWidth','paverThickness','paverDensity','paverBatchMass','paverTopLayerPct','paverTopThickness','paverTopCementPct','paverTopStonePct','paverTopGritPct','paverTopWaterPct','paverCementPct','paverFlyPct','paverStonePct','paverGritPct','paverWaterPct'],
+ coverblocks: ['coverLength','coverWidth','coverHeight','coverDensity','coverBatchMass','coverCementPct','coverFlyPct','coverSandPct','coverGritPct','coverWaterPct'],
+ rmc: ['rmcGrade','rmcStrength','rmcBinder','rmcFlyPct','rmcWater','rmcCoarsePct','rmcAdmix','rmcAir'],
+ production: ['dailyTarget','dailyBatches','moisture','batchesPerHour'],
+ optimization: ['trialMoisture','trialFlyShare','trialCementKg','trialNotes'], settings: []
+};
+const standardSnapshot = {};
+Object.entries(recipeModules).forEach(([module, ids]) => { standardSnapshot[module] = {}; ids.forEach(id => { const el=$(id); if(el) standardSnapshot[module][id] = el.value; }); });
+const previousSnapshot = JSON.parse(localStorage.getItem('forgemixBuildSnapshot') || 'null') || standardSnapshot;
+function applyRecipe(module, mode) { const ids=recipeModules[module]||[]; if(mode==='standard') ids.forEach(id=>{const el=$(id); if(el && standardSnapshot[module][id] !== undefined) el.value=standardSnapshot[module][id];}); if(mode==='revert') ids.forEach(id=>{const el=$(id); if(el && previousSnapshot[module] && previousSnapshot[module][id] !== undefined) el.value=previousSnapshot[module][id];}); ids.forEach(id=>$(id)?.dispatchEvent(new Event('input',{bubbles:true}))); document.querySelectorAll(`[data-recipe-module="${module}"] [data-recipe]`).forEach(b=>b.classList.toggle('active',b.dataset.recipe===mode)); try{localStorage.setItem('forgemixBuildSnapshot',JSON.stringify(standardSnapshot));}catch(e){} }
+document.querySelectorAll('.recipe-toolbar [data-recipe]').forEach(btn=>btn.addEventListener('click',()=>applyRecipe(btn.closest('.recipe-toolbar').dataset.recipeModule,btn.dataset.recipe)));
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
